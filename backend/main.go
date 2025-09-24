@@ -1,11 +1,14 @@
 package main
 
 import (
+	"html/template"
+
 	"github.com/nrf24l01/rerandom/core"
 	"github.com/nrf24l01/rerandom/handlers"
 	"github.com/nrf24l01/rerandom/redis"
 	"github.com/nrf24l01/rerandom/routes"
 	"github.com/nrf24l01/rerandom/schemas"
+	"github.com/nrf24l01/rerandom/templater"
 
 	"github.com/go-playground/validator"
 	"github.com/nrf24l01/go-web-utils/echokit"
@@ -40,6 +43,12 @@ func main() {
 
 	// Register custom validator
 	e.Validator = &echokit.CustomValidator{Validator: validator.New()}
+
+	// Инициализация шаблонов
+    renderer := &templater.TemplateRenderer{
+        Templates: template.Must(template.ParseGlob("templates/*.html")),
+    }
+    e.Renderer = renderer
 
 	if os.Getenv("RUNTIME_PRODUCTION") != "true" {
 		e.Use(echoMw.Logger())

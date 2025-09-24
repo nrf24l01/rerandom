@@ -24,11 +24,13 @@ func (h *Handler) GetRandomInteger(c echo.Context) error {
 			"error": err.Error(),
 		})
 	}
-	
-	// Здесь можно добавить логику генерации случайных чисел
-	// Пока просто возвращаем полученные параметры
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"message": "Parameters received successfully",
-		"params":  req,
-	})
+
+	tmp := schemas.TemplateAnswer{
+		RandomNumber: "42",
+		Min:          req.Min,
+		Max:          req.Max,
+		Timestamp:    "2023-01-01T00:00:00Z",
+	}
+
+	return c.Render(http.StatusOK, "random_return.html", tmp)
 }

@@ -10,3 +10,11 @@ type IntegerRequest struct {
 	Rnd    string `json:"rnd" query:"rnd" validate:"omitempty,oneof=new id.identifier"`
 	Cl     string `json:"cl" query:"cl" validate:"omitempty,oneof=w b"`
 }
+
+
+type TemplateAnswer struct {
+	RandomNumber string
+	Min          int
+	Max          int
+	Timestamp    string
+}
