@@ -1,0 +1,229 @@
+openapi: 3.0.3
+info:
+  title: ReRandom API
+  description: API для генерации случайных чисел
+  version: 1.0.0
+  contact:
+    name: ReRandom Support
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /integers/:
+    get:
+      tags:
+        - Random Numbers
+      summary: Генерация случайных целых чисел
+      description: Генерирует случайные целые числа с заданными параметрами
+      parameters:
+        - name: num
+          in: query
+          description: Количество случайных чисел для генерации
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            example: 1
+        - name: min
+          in: query
+          description: Минимальное значение
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: max
+          in: query
+          description: Максимальное значение
+          required: true
+          schema:
+            type: integer
+            example: 636
+        - name: col
+          in: query
+          description: Количество колонок в выводе
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 1
+        - name: base
+          in: query
+          description: Система счисления (2, 8, 10, 16)
+          required: false
+          schema:
+            type: integer
+            enum: [2, 8, 10, 16]
+            default: 10
+            example: 10
+        - name: format
+          in: query
+          description: |
+            Формат вывода:
+            - plain: простой текст с числом
+            - html: HTML с центрированным числом, параметрами и временной меткой
+            - json: JSON объект с числами и метаданными
+          required: false
+          schema:
+            type: string
+            enum: [plain, html, json]
+            default: plain
+            example: plain
+        - name: rnd
+          in: query
+          description: Тип генератора случайных чисел
+          required: false
+          schema:
+            type: string
+            enum: [new, id.identifier]
+            default: new
+            example: new
+        - name: cl
+          in: query
+          description: Тип символов для вывода
+          required: false
+          schema:
+            type: string
+            enum: [w, b]
+            default: w
+            example: w
+      responses:
+        '200':
+          description: Успешная генерация случайных чисел
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "425"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  numbers:
+                    type: array
+                    items:
+                      type: integer
+                    example: [425]
+                  parameters:
+                    type: object
+                    properties:
+                      num:
+                        type: integer
+                      min:
+                        type: integer
+                      max:
+                        type: integer
+                      base:
+                        type: integer
+            text/html:
+              schema:
+                type: string
+                example: "<center><span style='font-size:100%;font-weight:bold;'>241</span><span style='font-size:70%;'>Min:&nbsp;1, Max:&nbsp;636<br>2025-09-24 09:17:32 UTC</span></center>"
+        '400':
+          description: Неверные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /set:
+    post:
+      tags:
+        - Configuration
+      summary: Установка значения для генерации
+      description: Добавляет или обновляет значение, используемое в генерации случайных чисел
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - num
+              properties:
+                num:
+                  type: integer
+                  description: Число для установки в генераторе
+                  example: 42
+                key:
+                  type: string
+                  description: Ключ для идентификации значения (опционально)
+                  example: "seed_value"
+                description:
+                  type: string
+                  description: Описание значения (опционально)
+                  example: "Seed value for random generation"
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - num
+              properties:
+                num:
+                  type: integer
+                  description: Число для установки в генераторе
+                  example: 42
+      responses:
+        '200':
+          description: Значение успешно установлено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Value set successfully"
+                  value:
+                    type: integer
+                    example: 42
+        '400':
+          description: Неверные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Код ошибки
+          example: "invalid_parameter"
+        message:
+          type: string
+          description: Описание ошибки
+          example: "Invalid parameter value"
+        details:
+          type: string
+          description: Дополнительные детали ошибки
+          example: "Parameter 'num' must be between 1 and 10000"
+
+tags:
+  - name: Random Numbers
+    description: Операции для генерации случайных чисел
+  - name: Configuration
+    description: Операции для настройки генератора
