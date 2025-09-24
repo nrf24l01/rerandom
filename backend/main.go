@@ -1,84 +1,64 @@
 package main
 
 import (
+	"github.com/nrf24l01/rerandom/core"
+	"github.com/nrf24l01/rerandom/handlers"
+	"github.com/nrf24l01/rerandom/redis"
+	"github.com/nrf24l01/rerandom/routes"
+	"github.com/nrf24l01/rerandom/schemas"
+
+	"github.com/go-playground/validator"
+	"github.com/nrf24l01/go-web-utils/echokit"
+
 	"log"
-	"math/rand"
-	"time"
+	"os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/nrf24l01/rerandom/backend/core"
-	handlers "github.com/nrf24l01/rerandom/backend/handler"
-	"github.com/nrf24l01/rerandom/backend/redis"
+	"github.com/joho/godotenv"
+
+	"github.com/labstack/echo/v4"
+	echoMw "github.com/labstack/echo/v4/middleware"
 )
-
 func main() {
-	// Инициализируем генератор случайных чисел
-	rand.Seed(time.Now().UnixNano())
-
-	// Загружаем конфигурацию
+	if os.Getenv("PRODUCTION_ENV") != "true" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatalf("failed to load .env: %v", err)
+		}
+	}
+	
 	config, err := core.BuildConfigFromEnv()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err)
+		log.Fatalf("failed to build config: %v", err)
 	}
 
-	// Подключаемся к Redis
-	redisClient, err := redis.CreateRedisFromCFG(config)
+	e := echo.New()
+
+	redis, err := redis.CreateRedisFromCFG(config)
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
-	}
-	defer redisClient.Close()
-
-	// Создаём хендлер
-	h := &handlers.Handler{
-		Config: config,
-		Redis:  redisClient,
+		log.Fatalf("failed to create redis client: %v", err)
 	}
 
-	// Настраиваем Gin роутер
-	if config.ProductionEnv {
-		gin.SetMode(gin.ReleaseMode)
+	// Register custom validator
+	e.Validator = &echokit.CustomValidator{Validator: validator.New()}
+
+	if os.Getenv("RUNTIME_PRODUCTION") != "true" {
+		e.Use(echoMw.Logger())
 	}
+    e.Use(echoMw.Recover())
 
-	router := gin.Default()
+	e.Use(echoMw.CORSWithConfig(echoMw.CORSConfig{
+		AllowOrigins: []string{os.Getenv("ALLOWED_ORIGINS")},
+		AllowMethods: []string{echo.GET, echo.POST, echo.OPTIONS},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+		AllowCredentials: true,
+	}))
 
-	// Добавляем CORS middleware
-	router.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", config.AllowOrigins)
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
+	e.GET("/ping", func(c echo.Context) error {
+	return c.JSON(200, schemas.Message{Status: "Rerandom backend is ok"})
 	})
 
-	// Регистрируем роуты
-	setupRoutes(router, h)
-
-	// Запускаем сервер
-	port := ":8080"
-	if config.APPHost != "" {
-		port = ":" + config.APPHost
-	}
-
-	log.Printf("Server starting on port %s", port)
-	if err := router.Run(port); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
-}
-
-// setupRoutes настраивает все роуты приложения
-func setupRoutes(router *gin.Engine, h *handlers.Handler) {
-	// API роуты
-	api := router.Group("/")
-	{
-		api.GET("/integers/", h.GenerateIntegers)
-		api.POST("/set", h.SetValue)
-	}
-
-	// Swagger UI (опционально)
-	router.Static("/swagger", "./swagger.yaml")
+	handler := &handlers.Handler{Redis: redis}
+	routes.RegisterRoutes(e, handler)
+	
+	e.Logger.Fatal(e.Start(config.APPHost))
 }

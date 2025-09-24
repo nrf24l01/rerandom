@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nrf24l01/rerandom/backend/core"
+	"github.com/nrf24l01/rerandom/core"
 	"github.com/redis/go-redis/v9"
 )
 
