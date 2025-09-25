@@ -10,7 +10,7 @@ servers:
     description: Development server
 
 paths:
-  /login:
+  /auth/login:
     post:
       tags:
         - Authentication
@@ -55,7 +55,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /refresh:
+  /auth/refresh:
     post:
       tags:
         - Authentication
