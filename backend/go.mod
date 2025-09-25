@@ -1,4 +1,4 @@
-module github.com/nrf24l01/rerandom
+module github.com/nrf24l01/rerandom/backend
 
 go 1.24.6
 
