@@ -1,9 +1,8 @@
 package handlers
 
 import (
+	"github.com/nrf24l01/rerandom/backend/core"
 	"gorm.io/gorm"
-
-	"github.com/nrf24l01/rerandom/core"
 )
 
 type Handler struct {

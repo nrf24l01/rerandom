@@ -3,15 +3,14 @@ package main
 import (
 	"html/template"
 
-	"github.com/nrf24l01/rerandom/core"
-	"github.com/nrf24l01/rerandom/handlers"
-	"github.com/nrf24l01/rerandom/models"
-	"github.com/nrf24l01/rerandom/routes"
-	"github.com/nrf24l01/rerandom/schemas"
-	"github.com/nrf24l01/rerandom/templater"
-
 	"github.com/go-playground/validator"
 	"github.com/nrf24l01/go-web-utils/echokit"
+	"github.com/nrf24l01/rerandom/backend/core"
+	"github.com/nrf24l01/rerandom/backend/handlers"
+	"github.com/nrf24l01/rerandom/backend/models"
+	"github.com/nrf24l01/rerandom/backend/routes"
+	"github.com/nrf24l01/rerandom/backend/schemas"
+	"github.com/nrf24l01/rerandom/backend/templater"
 
 	"log"
 	"os"

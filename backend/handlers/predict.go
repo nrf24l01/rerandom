@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/nrf24l01/rerandom/models"
-	"github.com/nrf24l01/rerandom/schemas"
+	"github.com/nrf24l01/rerandom/backend/models"
+	"github.com/nrf24l01/rerandom/backend/schemas"
 )
 
 func (h *Handler) AddPredict(c echo.Context) error {

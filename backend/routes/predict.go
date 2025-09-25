@@ -3,8 +3,8 @@ package routes
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/nrf24l01/go-web-utils/echokit"
-	"github.com/nrf24l01/rerandom/handlers"
-	"github.com/nrf24l01/rerandom/schemas"
+	"github.com/nrf24l01/rerandom/backend/handlers"
+	"github.com/nrf24l01/rerandom/backend/schemas"
 )
 
 func RegisterPredictRoutes(e *echo.Echo, h *handlers.Handler) {
