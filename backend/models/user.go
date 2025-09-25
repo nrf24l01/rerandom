@@ -19,11 +19,8 @@ func (u *User) CheckPassword(password string) bool {
 	return res && err == nil
 }
 
-func (u *User) HashPassword() error {
-	hash, err := passhash.HashPassword(u.Password, passhash.DefaultParams)
-	if err != nil {
-		return err
-	}
-	u.Password = hash
-	return nil
+func (u *User) SetPassword(password string) error {
+	var err error
+	u.Password, err = passhash.HashPassword(password, passhash.DefaultParams)
+	return err
 }
