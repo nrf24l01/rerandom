@@ -5,7 +5,7 @@ import (
 
 	"github.com/nrf24l01/rerandom/core"
 	"github.com/nrf24l01/rerandom/handlers"
-	"github.com/nrf24l01/rerandom/redis"
+	"github.com/nrf24l01/rerandom/models"
 	"github.com/nrf24l01/rerandom/routes"
 	"github.com/nrf24l01/rerandom/schemas"
 	"github.com/nrf24l01/rerandom/templater"
@@ -36,10 +36,7 @@ func main() {
 
 	e := echo.New()
 
-	redis, err := redis.CreateRedisFromCFG(config)
-	if err != nil {
-		log.Fatalf("failed to create redis client: %v", err)
-	}
+	db := models.RegisterPostgres(config)
 
 	// Register custom validator
 	e.Validator = &echokit.CustomValidator{Validator: validator.New()}
@@ -66,7 +63,7 @@ func main() {
 	return c.JSON(200, schemas.Message{Status: "Rerandom backend is ok"})
 	})
 
-	handler := &handlers.Handler{Redis: redis}
+	handler := &handlers.Handler{DB: db, Config: config}
 	routes.RegisterRoutes(e, handler)
 	
 	e.Logger.Fatal(e.Start(config.APPHost))

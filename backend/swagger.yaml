@@ -10,6 +10,245 @@ servers:
     description: Development server
 
 paths:
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Вход пользователя
+      description: Аутентификация пользователя с выдачей JWT токенов
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "user123"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        '200':
+          description: Успешная аутентификация
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; Path=/; Max-Age=604800"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Обновление access токена
+      description: Обновляет access токен используя refresh токен из куки
+      parameters:
+        - name: Cookie
+          in: header
+          required: true
+          schema:
+            type: string
+            example: "refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        '200':
+          description: Новый access токен
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          description: Недействительный refresh токен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /predict/add:
+    post:
+      tags:
+        - Predictions
+      summary: Добавить предикт
+      description: Создает новый предикт
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - answ
+              properties:
+                answ:
+                  type: integer
+                  example: 42
+                min:
+                  type: integer
+                  example: 1
+                max:
+                  type: integer
+                  example: 100
+                drop_count:
+                  type: integer
+                  example: 5
+      responses:
+        '201':
+          description: Предикт успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Predict'
+        '400':
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /predict/list:
+    get:
+      tags:
+        - Predictions
+      summary: Список предиктов
+      description: Получить список всех предиктов пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список предиктов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Predict'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /predict/remove/{uuid}:
+    delete:
+      tags:
+        - Predictions
+      summary: Удалить предикт
+      description: Удаляет предикт по UUID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Предикт успешно удален
+        '404':
+          description: Предикт не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /predict/edit/{uuid}:
+    put:
+      tags:
+        - Predictions
+      summary: Редактировать предикт
+      description: Редактирует существующий предикт по UUID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answ:
+                  type: integer
+                  example: 42
+                min:
+                  type: integer
+                  example: 1
+                max:
+                  type: integer
+                  example: 100
+                drop_count:
+                  type: integer
+                  example: 5
+      responses:
+        '200':
+          description: Предикт успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Predict'
+        '404':
+          description: Предикт не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Неверные параметры
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Не авторизован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /integers/:
     get:
       tags:
@@ -134,74 +373,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
-  /set:
-    post:
-      tags:
-        - Configuration
-      summary: Установка значения для генерации
-      description: Добавляет или обновляет значение, используемое в генерации случайных чисел
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - num
-              properties:
-                num:
-                  type: integer
-                  description: Число для установки в генераторе
-                  example: 42
-                key:
-                  type: string
-                  description: Ключ для идентификации значения (опционально)
-                  example: "seed_value"
-                description:
-                  type: string
-                  description: Описание значения (опционально)
-                  example: "Seed value for random generation"
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              required:
-                - num
-              properties:
-                num:
-                  type: integer
-                  description: Число для установки в генераторе
-                  example: 42
-      responses:
-        '200':
-          description: Значение успешно установлено
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Value set successfully"
-                  value:
-                    type: integer
-                    example: 42
-        '400':
-          description: Неверные параметры запроса
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Внутренняя ошибка сервера
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     Error:
       type: object
@@ -222,8 +400,58 @@ components:
           description: Дополнительные детали ошибки
           example: "Parameter 'num' must be between 1 and 10000"
 
+    Predict:
+      type: object
+      required:
+        - uuid
+        - answ
+        - finished
+        - added
+      properties:
+        uuid:
+          type: string
+          format: uuid
+          description: Уникальный идентификатор предикта
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        answ:
+          type: integer
+          description: Ответ предикта
+          example: 42
+        min:
+          type: integer
+          description: Минимальное значение
+          example: 1
+        max:
+          type: integer
+          description: Максимальное значение
+          example: 100
+        dropped:
+          type: integer
+          description: Количество сброшенных попыток
+          example: 3
+        max_drops:
+          type: integer
+          description: Максимальное количество сбросов
+          example: 5
+        finished:
+          type: boolean
+          description: Завершен ли предикт
+          example: false
+        added:
+          type: integer
+          format: int64
+          description: Unix timestamp добавления
+          example: 1727240952
+        last_dropped:
+          type: integer
+          format: int64
+          description: Unix timestamp последнего сброса
+          example: 1727240952
+
 tags:
   - name: Random Numbers
     description: Операции для генерации случайных чисел
-  - name: Configuration
-    description: Операции для настройки генератора
+  - name: Authentication
+    description: Операции для аутентификации пользователей
+  - name: Predictions
+    description: Операции для работы с предиктами
