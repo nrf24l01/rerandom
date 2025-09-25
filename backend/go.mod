@@ -2,6 +2,8 @@ module github.com/nrf24l01/rerandom
 
 go 1.24.6
 
+toolchain go1.24.7
+
 require (
 	github.com/go-playground/validator v9.31.0+incompatible
 	github.com/joho/godotenv v1.5.1
