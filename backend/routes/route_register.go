@@ -7,4 +7,6 @@ import (
 
 func RegisterRoutes(e *echo.Echo, h *handlers.Handler) {
 	RegisterIntegerRoutes(e, h)
+	RegisterAuthRoutes(e, h)
+	RegisterPredictRoutes(e, h)
 }

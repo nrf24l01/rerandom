@@ -17,6 +17,9 @@ type Config struct {
 
 	AllowOrigins            string
 
+	JWTAccessSecret         string
+	JWTRefreshSecret        string
+
 	TestEnv                 bool
 	ProductionEnv           bool
 }
@@ -34,6 +37,9 @@ func BuildConfigFromEnv() (*Config, error) {
 		PGDatabase:       os.Getenv("POSTGRES_DB"),
 		PGSSLMode:        os.Getenv("POSTGRES_SSLMODE"),
 		PGTimeZone:       os.Getenv("POSTGRES_TIMEZONE"),
+
+		JWTAccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
+		JWTRefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
 
 		TestEnv:          os.Getenv("TEST_ENV") == "true",
 		ProductionEnv:    os.Getenv("PRODUCTION_ENV") == "true",

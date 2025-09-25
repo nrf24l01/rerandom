@@ -6,7 +6,7 @@ info:
   contact:
     name: ReRandom Support
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:1327
     description: Development server
 
 paths:
