@@ -2,17 +2,18 @@ package core
 
 import (
 	"os"
-	"strconv"
 )
 
 type Config struct {
 	APPHost 	  string
 
-	RedisHost     string
-	RedisPort     string
-	RedisPassword string
-	RedisDB       int
-	KeysSetName   string
+	PGHost                  string
+	PGPort                  string
+	PGUser                  string
+	PGPassword              string
+	PGDatabase              string
+	PGSSLMode               string
+	PGTimeZone              string
 
 	AllowOrigins            string
 
@@ -21,22 +22,18 @@ type Config struct {
 }
 
 func BuildConfigFromEnv() (*Config, error) {
-	redisDBStr := os.Getenv("REDIS_DB")
-	redisDB, err := strconv.Atoi(redisDBStr)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := &Config{
 		APPHost:          os.Getenv("APP_HOST"),
 		
 		AllowOrigins:     os.Getenv("ALLOW_ORIGINS"),
 
-		RedisHost: 	os.Getenv("REDIS_HOST"),
-		RedisPort: 	os.Getenv("REDIS_PORT"),
-		RedisPassword: os.Getenv("REDIS_PASSWORD"),
-		RedisDB: 	redisDB,
-		KeysSetName: os.Getenv("KEYS_SET_NAME"),
+		PGHost:           os.Getenv("POSTGRES_HOST"),
+		PGPort:           os.Getenv("POSTGRES_PORT"),
+		PGUser:           os.Getenv("POSTGRES_USER"),
+		PGPassword:       os.Getenv("POSTGRES_PASSWORD"),
+		PGDatabase:       os.Getenv("POSTGRES_DB"),
+		PGSSLMode:        os.Getenv("POSTGRES_SSLMODE"),
+		PGTimeZone:       os.Getenv("POSTGRES_TIMEZONE"),
 
 		TestEnv:          os.Getenv("TEST_ENV") == "true",
 		ProductionEnv:    os.Getenv("PRODUCTION_ENV") == "true",
