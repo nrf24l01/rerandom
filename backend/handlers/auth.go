@@ -32,6 +32,7 @@ func (h *Handler) Login(c echo.Context) error {
 	cookie.Value = refreshToken
 	cookie.HttpOnly = true
 	cookie.Path = "/"
+	cookie.SameSite = 2
 	c.SetCookie(cookie)
 
 	return c.JSON(http.StatusOK, schemas.LoginResponse{
@@ -63,12 +64,12 @@ func (h *Handler) Refresh(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, schemas.DefaultInternalErrorResponse)
 	}
-
 	cookie := new(http.Cookie)
 	cookie.Name = "refresh_token"
 	cookie.Value = newRefreshToken
 	cookie.HttpOnly = true
 	cookie.Path = "/"
+	cookie.SameSite = 2
 	c.SetCookie(cookie)
 
 	return c.JSON(http.StatusOK, schemas.RefreshResponse{

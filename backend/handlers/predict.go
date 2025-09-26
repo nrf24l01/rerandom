@@ -52,7 +52,7 @@ func (h *Handler) PredictList(c echo.Context) error {
 			digits.max_drops,
 			CASE WHEN COALESCE(COUNT(digit_drops.id), 0) >= digits.max_drops THEN true ELSE false END as finished,
 			EXTRACT(EPOCH FROM digits.created_at)::bigint as added,
-			MAX(digit_drops.dropped_at) as last_dropped`).
+			EXTRACT(EPOCH FROM MAX(digit_drops.created_at))::bigint as last_dropped`).
 		Joins("LEFT JOIN digit_drops ON digits.id = digit_drops.digit_id").
 		Group("digits.id, digits.value, digits.min, digits.max, digits.max_drops, digits.created_at").
 		Scan(&predicts).Error
