@@ -1,3 +1,14 @@
 .env
 tmp
 ssl
+
+# Google Service Account credentials
+service_account.json
+*service_account*.json
+credentials.json
+*credentials*.json
+
+# Any key files
+*.key
+*.pem
+*.p12
