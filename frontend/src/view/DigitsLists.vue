@@ -25,7 +25,7 @@
         <!-- Search and filter -->
         <div v-else class="mb-4">
             <input v-model="search" placeholder="Search..." 
-                         class="px-4 py-2 border rounded w-full md:w-64 mb-4"/>
+                        class="px-4 py-2 border rounded w-full md:w-64 mb-4"/>
             
             <div class="overflow-x-auto bg-white rounded-lg shadow">
                 <table class="min-w-full divide-y divide-gray-200">
@@ -177,6 +177,10 @@ async function fetchPredicts() {
         const res = await api.get('/predict/list')
         predicts.value = res.data
     } catch (err) {
+        if (err.response && err.response.status === 401) {
+            $router.push('/login')
+            return
+        }
         console.error(err)
         error.value = "Failed to load predicts: " + err.message
     } finally {

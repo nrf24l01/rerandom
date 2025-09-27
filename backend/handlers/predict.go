@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/nrf24l01/rerandom/backend/models"
 	"github.com/nrf24l01/rerandom/backend/schemas"
@@ -44,6 +45,7 @@ func (h *Handler) PredictList(c echo.Context) error {
 	var predicts []schemas.PredictResponse
 	
 	err := h.DB.Table("digits").
+		Where("digits.deleted_at IS NULL").
 		Select(`digits.id::text as uuid,
 			digits.value as answ,
 			CASE WHEN digits.min = 0 THEN NULL ELSE digits.min END as min,
@@ -62,4 +64,27 @@ func (h *Handler) PredictList(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, predicts)
+}
+
+func (h *Handler) DeletePredict(c echo.Context) error {
+	predict_uuid := c.Param("uuid")
+
+	if _, err := uuid.Parse(predict_uuid); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid UUID"})
+	}
+
+	var predict models.Digit
+	if err := h.DB.Where("id = ?", predict_uuid).First(&predict).Error; err != nil {
+		return c.JSON(http.StatusNotFound, schemas.DefaultNotFoundResponse)
+	}
+
+	if err := h.DB.Where("digit_id = ?", predict.ID).Delete(&models.DigitDrop{}).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, schemas.DefaultInternalErrorResponse)
+	}
+
+	if err := h.DB.Delete(&predict).Error; err != nil {
+		return c.JSON(http.StatusInternalServerError, schemas.DefaultInternalErrorResponse)
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Predict deleted successfully"})
 }

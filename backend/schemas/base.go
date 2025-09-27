@@ -19,3 +19,8 @@ var DefaultInternalErrorResponse = ErrorResponse{
 	Message: "Internal Server Error",
 	Code:    http.StatusInternalServerError,
 }
+
+var DefaultNotFoundResponse = ErrorResponse{
+	Message: "Resource Not Found",
+	Code:    http.StatusNotFound,
+}

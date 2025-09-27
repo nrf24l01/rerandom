@@ -64,6 +64,7 @@ func (h *Handler) GetRandomInteger(c echo.Context) error {
 				((d.min IS NULL OR d.min = 0) AND (d.max IS NULL OR d.max = 0) AND d.value >= ? AND d.value <= ?)
 			)
 			AND (d.max_drops - COALESCE(drop_counts.drop_count, 0)) > 0
+			AND d.deleted_at IS NULL
 		ORDER BY priority ASC, remaining_drops DESC
 		LIMIT 1
 	`, req.Min, req.Max, req.Min, req.Max, req.Min, req.Max, req.Min, req.Max).Scan(&results).Error

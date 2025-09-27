@@ -18,4 +18,5 @@ func RegisterPredictRoutes(e *echo.Echo, h *handlers.Handler) {
 		return &schemas.PredictAddRequest{}
 	}))
 	group.GET("/list", h.PredictList)
+	group.DELETE("/:uuid", h.DeletePredict)
 }
