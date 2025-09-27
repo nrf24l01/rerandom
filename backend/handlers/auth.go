@@ -48,17 +48,19 @@ func (h *Handler) Refresh(c echo.Context) error {
 
 	claims, err := jwtutil.ValidateToken(refreshToken.Value, []byte(h.Config.JWTRefreshSecret))
 	if err != nil {
-		return c.JSON(http.StatusUnauthorized, schemas.Message{Status: "Unauthorized"})
+		return c.JSON(http.StatusUnauthorized, schemas.Message{Status: "Unauthorized, failed to validate token"})
 	}
 
 	userID, ok := claims["user_id"].(string)
 	if !ok || userID == "" {
-		return c.JSON(http.StatusUnauthorized, schemas.Message{Status: "Unauthorized"})
+		return c.JSON(http.StatusUnauthorized, schemas.Message{Status: "Unauthorized, failed to get user ID"})
 	}
-	username, ok := claims["username"].(string)
-	if !ok || username == "" {
-		return c.JSON(http.StatusUnauthorized, schemas.Message{Status: "Unauthorized"})
+
+	var user models.User
+	if err := h.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		return c.JSON(http.StatusUnauthorized, schemas.Message{Status: "Unauthorized, user not found"})
 	}
+	username := user.Username
 
 	accessToken, newRefreshToken, err := jwtutil.GenerateTokenPair(userID, username, []byte(h.Config.JWTAccessSecret), []byte(h.Config.JWTRefreshSecret))
 	if err != nil {
