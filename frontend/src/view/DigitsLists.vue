@@ -86,7 +86,9 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '@/axios'
 import AddPredictModal from '@/view/AddPredictModal.vue'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const predicts = ref([])
 const showModal = ref(false)
 const loading = ref(true)
@@ -178,7 +180,7 @@ async function fetchPredicts() {
         predicts.value = res.data
     } catch (err) {
         if (err.response && err.response.status === 401) {
-            $router.push('/login')
+            router.push('/login')
             return
         }
         console.error(err)
