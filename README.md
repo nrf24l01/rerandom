@@ -25,6 +25,11 @@ creds - admin:12345678.
 ### On client
 *I WILL HATE YOU IF YOU DO IT*
 **ONLY ON YOUR MACHINE FOR EDUCATION PURPOSES**
+- Add to /etc/hosts
+```
+<server-ip> www.random.org
+<server-ip> random.org
+```
 - Download cert
 ```sh
 wget <server-ip>/cert
