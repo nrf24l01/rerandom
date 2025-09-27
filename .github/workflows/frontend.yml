@@ -48,3 +48,4 @@ jobs:
             cache-to: type=gha,mode=max
             build-args: |
               VITE_BACKEND_URL=${{ vars.VITE_BACKEND_URL }}
+              VITE_SMART_GEN_URL=${{ vars.VITE_SMART_GEN_URL }}
