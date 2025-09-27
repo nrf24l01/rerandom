@@ -8,7 +8,7 @@ const api = axios.create({
 
 // Extract refresh token function to make it reusable
 export async function refreshAccessToken() {
-  const res = await axios.post(import.meta.env.VITE_BACKEND_URL + '/auth/refresh', {}, {
+  const res = await api.post('/auth/refresh', {}, {
     withCredentials: true
   })
   return res.data.access_token

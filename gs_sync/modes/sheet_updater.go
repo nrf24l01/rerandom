@@ -2,6 +2,7 @@ package modes
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/nrf24l01/rerandom/gs_sync/config"
@@ -12,7 +13,12 @@ import (
 func RunSync() {
 	// Load configuration from environment variables or a config file
 	cfg := config.BuildConfigFromEnv()
-	gscfg := config.BuildFromFile("service_account.json")
+	var gscfg *config.GSConfig
+	if os.Getenv("PRODUCTION_ENV") != "true" {
+		gscfg = config.BuildFromFile("service_account.json")
+	} else {
+		gscfg = config.GSBuildFromEnv()
+	}
 	redis := redis.InitRedisFromCFG(cfg)
 
 	for {

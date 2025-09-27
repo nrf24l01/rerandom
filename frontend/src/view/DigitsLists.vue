@@ -187,7 +187,7 @@ async function fetchPredicts() {
         predicts.value = res.data
     } catch (err) {
         if (err.response && err.response.status === 401) {
-            router.push('/login')
+            router.push({ name: 'Login' })
             return
         }
         console.error(err)
@@ -207,6 +207,6 @@ onMounted(() => {
 })
 
 function goSmart() {
-    router.push('/smart')
+    router.push({ name: 'SmartGeneration' })
 }
 </script>

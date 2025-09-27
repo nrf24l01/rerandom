@@ -24,7 +24,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import api from '@/axios'
 import { useAuthStore } from '@/stores/auth'
 
 const username = ref('')
@@ -39,14 +39,10 @@ async function handleLogin() {
   loading.value = true
   error.value = null
   try {
-    const response = await axios.post(
-      import.meta.env.VITE_BACKEND_URL + '/auth/login',
-      { username: username.value, password: password.value },
-      { withCredentials: true }
-    )
+  const response = await api.post('/auth/login', { username: username.value, password: password.value })
     const token = response.data.access_token
     auth.setToken(token)
-    router.push('/')
+  router.push({ name: 'PredictsList' })
   } catch (err) {
     if (err.response && err.response.data && err.response.data.message) {
       error.value = err.response.data.message

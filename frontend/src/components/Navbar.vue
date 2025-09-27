@@ -5,19 +5,19 @@
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center">
                     <FontAwesomeIcon :icon="faDice" class="mr-2" />
-                    <a href="/" class="text-xl font-bold">ReRandom.neorg</a>
+                    <router-link to="/" class="text-xl font-bold">ReRandom.neorg</router-link>
                 </div>
 
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex space-x-4 items-center">
-                    <a
+                    <router-link
                         v-for="item in navItems"
                         :key="item.name"
-                        :href="item.link"
+                        :to="item.link"
                         class="hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium"
                     >
                         {{ item.name }}
-                    </a>
+                    </router-link>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -38,14 +38,14 @@
         <!-- Mobile Menu -->
         <div v-if="isMenuOpen" class="md:hidden">
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-800">
-                <a
+                <router-link
                     v-for="item in navItems"
                     :key="item.name"
-                    :href="item.link"
+                    :to="item.link"
                     class="hover:bg-gray-700 block px-3 py-2 rounded-md text-base font-medium"
                 >
                     {{ item.name }}
-                </a>
+                </router-link>
             </div>
         </div>
     </nav>
@@ -56,10 +56,10 @@ import { ref } from 'vue';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { faDice } from '@fortawesome/free-solid-svg-icons';
   
-const navItems = ref([
-    { name: 'List', link: '/' },
-    { name: 'Smart Generation', link: '/smart-generation' },
-    { name: 'Login', link: '/login' },
+    const navItems = ref([
+    { name: 'List', link: { name: 'PredictsList' } },
+    { name: 'Smart Generation', link: { name: 'SmartGeneration' } },
+    { name: 'Login', link: { name: 'Login' } },
 ]);
 
 const isMenuOpen = ref(false);

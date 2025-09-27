@@ -40,6 +40,57 @@ services:
         condition: service_healthy
     networks:
       - rerandom-net
+  
+  gs_sync_web:
+    container_name: rerandom-gs_sync-web
+    build:
+      context: gs_sync/
+      dockerfile: Dockerfile.web
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8002/ping"]
+      interval: 5s
+      retries: 30
+      timeout: 3s
+      start_period: 2s
+    env_file:
+      - .env
+    expose:
+      - 8002
+    environment:
+      - REDIS_HOST=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - REDIS_KEY=fraction_users
+      - APP_HOST=:8002
+      - PRODUCTION_ENV=true
+    depends_on:
+      redis:
+        condition: service_healthy
+      gs_sync_sync:
+        condition: service_started
+    networks:
+      - rerandom-net
+
+  gs_sync_sync:
+    container_name: rerandom-gs_sync-sync
+    build:
+      context: gs_sync/
+      dockerfile: Dockerfile.sync
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+      - REDIS_KEY=fraction_users
+      - PRODUCTION_ENV=true
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - rerandom-net
 
   postgres:
     image: postgres:17-alpine
@@ -59,7 +110,48 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       retries: 5
+      start_period: 3s
     command: ["postgres", "-c", "listen_addresses=*"]
+
+  redis:
+    image: redis:7
+    container_name: rerandom-redis
+    restart: always
+    expose:
+      - "6379"
+    networks:
+      - rerandom-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+  
+  frontend:
+    container_name: rerandom-frontend
+    build:
+      context: frontend
+      args:
+        VITE_BACKEND_URL: /api
+        VITE_SMART_GEN_URL: /api/smart
+    depends_on:
+      backend:
+        condition: service_healthy
+      gs_sync_web:
+        condition: service_healthy
+    env_file:
+      - .env
+    expose:
+      - "8001"
+    networks:
+      - rerandom-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8001"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 4s
 
   nginx:
     image: nginx:stable-alpine
@@ -74,6 +166,10 @@ services:
       - ./nginx:/var/www/html:ro
     depends_on:
       backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+      gs_sync_web:
         condition: service_healthy
     networks:
       - rerandom-net

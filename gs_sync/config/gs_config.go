@@ -38,6 +38,12 @@ func BuildFromFile(filename string) *GSConfig {
 	return cfg
 }
 
+func GSBuildFromEnv() *GSConfig {
+	cfg := &GSConfig{}
+	cfg.LoadFromEnv()
+	return cfg
+}
+
 // LoadFromEnv loads the config from environment variables
 func (c *GSConfig) LoadFromEnv() {
 	if val := os.Getenv("TYPE"); val != "" {
