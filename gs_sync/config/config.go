@@ -13,6 +13,8 @@ type Config struct {
 	REDIS_PASSWORD string
 	REDIS_DB       int
 	REDIS_KEY      string
+
+	APP_HOST string
 }
 
 func BuildConfigFromEnv() *Config {
@@ -28,5 +30,6 @@ func BuildConfigFromEnv() *Config {
 		REDIS_HOST:    os.Getenv("REDIS_HOST"),
 		REDIS_PASSWORD: os.Getenv("REDIS_PASSWORD"),
 		REDIS_KEY:     os.Getenv("REDIS_KEY"),
+		APP_HOST:      os.Getenv("APP_HOST"),
 	}
 }

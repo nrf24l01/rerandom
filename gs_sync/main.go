@@ -15,10 +15,13 @@ func main() {
 			log.Fatalf("failed to load .env: %v", err)
 		}
 	}
+	log.Printf("Arguments: %v\n", os.Args)
 
 	if len(os.Args) > 1 && os.Args[1] == "sync" {
 		modes.RunSync()
+	} else if len(os.Args) > 1 && os.Args[1] == "webserver" {
+		modes.RunWebserver()
 	} else {
-		panic("unknown command, use 'sync' to sync the sheet")
+		panic("unknown command, use 'sync' to sync the sheet, or 'webserver' to start the webserver")
 	}
 }

@@ -17,7 +17,7 @@ type Action struct {
 }
 
 type Sheet struct {
-	ClearUsers    []SheetRow
-	Actions       []Action
-	ModifiedUsers []SheetRow
+	ClearUsers    []SheetRow  `json:"clear_users"`
+	Actions       []Action    `json:"actions"`
+	ModifiedUsers []SheetRow  `json:"modified_users"`
 }
