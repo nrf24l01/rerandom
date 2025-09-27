@@ -72,50 +72,64 @@ func (h *Handler) wsHandler(c echo.Context) error {
 		}
 	}()
 
-	// handle both incoming and periodic updates
+	// handle incoming
 	for {
 		select {
-		case <-ticker.C:
-			var rows []task.SheetRow
-			if err := h.redis.LoadStruct(&rows); err != nil {
-				log.Printf("Could not load from Redis: %v", err)
-			}
-			sheet.ClearUsers, sheet.ModifiedUsers, sheet.Actions = rows, rows, []task.Action{}
-			sheet.Rebuild()
-
-			answer, err := json.Marshal(sheet.ModifiedUsers)
-			if err != nil {
-				log.Println("Marshal error:", err)
-				return err
-			}
-
-			if err := conn.WriteMessage(websocket.TextMessage, answer); err != nil {
-				log.Println("Write error:", err)
-				return err
-			}
-
 		case msg := <-msgChan:
 			log.Printf("Received: %s\n", msg)
+			h.redis.LoadStruct(&sheet.ClearUsers)
 
 			var req schemas.TaskRequest
 			if err := json.Unmarshal(msg, &req); err != nil {
 				log.Println("Unmarshal error:", err)
 				return err
 			}
+			sheet.ModifiedUsers = sheet.ClearUsers
 
-			switch req.Type {
-			case 1:
-				sheet.ChangeFraction(req.RowId, req.Param)
-			case 2:
-				sheet.ChangeAlive(req.RowId, req.Param != 0)
-			default:
-				log.Printf("Unknown request type: %d", req.Type)
-				continue
+			sheet.Actions = []task.Action{}
+			for _, rowID := range req.PreExcluded {
+				sheet.Actions = append(sheet.Actions, task.Action{
+					Type:  2,
+					RowId: rowID,
+					Param: 0,
+				})
+			}
+			sheet.Rebuild()
+
+			var drops []schemas.UserDrop
+			
+			log.Print(sheet.ModifiedUsers, sheet.Actions)
+			for _, rowID := range req.Excluded {
+				var user task.SheetRow
+				for _, u := range sheet.ModifiedUsers {
+					if u.Id == rowID {
+						user = u
+						break
+					}
+				}
+				drops = append(drops, schemas.UserDrop{
+					RowId:        user.Id,
+					FirstName:    user.FirstName,
+					LastName:     user.LastName,
+					FractionFrom: user.FractionFrom,
+					FractionTo:   user.FractionTo,
+					Fraction:     user.Fraction,
+					MaxFraction:  sheet.GetTotalFraction() - user.Fraction,
+				})
+
+				log.Print(sheet.ModifiedUsers, sheet.Actions)
+
+				sheet.Actions = append(sheet.Actions, task.Action{
+					Type:  2,
+					RowId: rowID,
+					Param: 0,
+				})
+				sheet.Rebuild()
 			}
 
 			sheet.Rebuild()
 
-			answer, err := json.Marshal(sheet.ModifiedUsers)
+			answer, err := json.Marshal(drops)
 			if err != nil {
 				log.Println("Marshal error:", err)
 				return err

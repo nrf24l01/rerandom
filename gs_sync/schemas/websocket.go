@@ -1,7 +1,16 @@
 package schemas
 
 type TaskRequest struct {
-	Type  uint `json:"type"`  // 1 - change fraction, 2 - change alive
-	RowId uint `json:"row_id"`
-	Param uint `json:"param"` // new fraction or alive value
+	PreExcluded []uint `json:"pre_excluded"`
+	Excluded    []uint `json:"excluded"`
+}
+
+type UserDrop struct {
+	RowId        uint    `json:"row_id"`
+	FirstName    string  `json:"first_name"`
+	LastName     string  `json:"last_name"`
+	FractionFrom uint    `json:"fraction_from"`
+	FractionTo   uint    `json:"fraction_to"`
+	Fraction     uint    `json:"fraction"`
+	MaxFraction  uint    `json:"max_fraction"`
 }

@@ -58,6 +58,7 @@ import { faDice } from '@fortawesome/free-solid-svg-icons';
   
 const navItems = ref([
     { name: 'List', link: '/' },
+    { name: 'Smart Generation', link: '/smart-generation' },
     { name: 'Login', link: '/login' },
 ]);
 

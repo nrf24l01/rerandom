@@ -2,10 +2,16 @@
     <div class="p-6">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-bold">Predicts List</h2>
-            <button @click="showModal = true" 
-                            class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center">
-                <span class="material-icons mr-1">add</span> Add Number
-            </button>
+            <div class="flex space-x-2">
+                <button @click="showSmartModal = true" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors flex items-center">
+                    <span class="material-icons mr-1">smart_toy</span> Smart Add
+                </button>
+                <button @click="showModal = true" 
+                                class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors flex items-center">
+                    <span class="material-icons mr-1">add</span> Add Number
+                </button>
+            </div>
         </div>
 
         <!-- Loading and error states -->
@@ -69,6 +75,8 @@
         <!-- Modals -->
         <AddPredictModal v-if="showModal" @close="showModal = false" @added="handleAdded" />
         
+        <SmartGeneration v-if="showSmartModal" @close="showSmartModal = false" />
+        
         <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                 <h3 class="text-lg font-bold mb-4">Confirm Deletion</h3>
@@ -86,6 +94,7 @@
 import { ref, onMounted, computed } from 'vue'
 import api from '@/axios'
 import AddPredictModal from '@/view/AddPredictModal.vue'
+import SmartGeneration from '@/view/SmartGeneration.vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -98,6 +107,7 @@ const sortKey = ref('added')
 const sortOrder = ref('desc')
 const showDeleteConfirm = ref(false)
 const itemToDelete = ref(null)
+const showSmartModal = ref(false)
 
 const columns = [
     { key: 'uuid', label: 'UUID' },
