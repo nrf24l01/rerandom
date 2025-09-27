@@ -28,6 +28,7 @@
               <div class="font-semibold">{{ person.last_name }} {{ person.first_name }}</div>
               <div class="text-sm text-gray-600">
                 Доля: {{ person.fraction }} ({{ person.fraction_from }}-{{ person.fraction_to }})
+                <span class="ml-2">Макс: {{ person.max_fraction || 0 }}</span>
               </div>
             </div>
             
@@ -68,11 +69,11 @@
       <!-- Второй список - участники для генерации -->
       <div class="bg-white rounded-lg shadow-lg p-6">
         <h2 class="text-xl font-bold mb-4">Список для генерации</h2>
+        <!-- Общая информация о списке для генерации -->
         <div class="mb-4 p-3 bg-gray-100 rounded-lg">
           <div class="text-sm text-gray-700">
-            <strong>Общий диапазон долей:</strong> 
-            {{ generationRange.from }}-{{ generationRange.to }} 
-            (всего: {{ generationRange.total }})
+            <strong>Список участников для генерации:</strong>
+            всего: {{ generationList.length }}
           </div>
         </div>
         
@@ -86,6 +87,7 @@
               <div class="font-semibold">{{ person.last_name }} {{ person.first_name }}</div>
               <div class="text-sm text-gray-600">
                 Доля: {{ person.fraction }} ({{ person.fraction_from }}-{{ person.fraction_to }})
+                <span class="ml-2">Макс: {{ person.max_fraction || 0 }}</span>
               </div>
             </div>
             
@@ -119,44 +121,76 @@
           </div>
         </div>
         
-        <!-- Кнопка генерации -->
-        <div class="mt-6">
-          <button
-            @click="generateNumber"
-            :disabled="generationList.length === 0 || isGenerating"
-            class="w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed font-semibold"
-          >
-            {{ isGenerating ? 'Генерация...' : 'Сгенерировать число' }}
-          </button>
-        </div>
-        
-        <!-- Результат генерации -->
-        <div v-if="generationResult" class="mt-4 p-4 bg-green-100 rounded-lg">
-          <h3 class="font-semibold text-green-800 mb-2">Результат генерации:</h3>
-          <div class="text-lg font-bold text-green-900">Число: {{ generationResult.number }}</div>
-          <div v-if="generationResult.winner" class="text-sm text-green-700 mt-1">
-            Победитель: {{ generationResult.winner.last_name }} {{ generationResult.winner.first_name }}
-          </div>
-        </div>
+  <!-- Генерация убрана: интерфейс только для управления списком участников -->
       </div>
+    </div>
+  </div>
+
+  <!-- Таблица чисел для выгрузки -->
+  <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+    <h2 class="text-xl font-bold mb-4">Таблица чисел</h2>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">ФИО</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Мин</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Макс</th>
+            <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">Число</th>
+            <th class="px-4 py-2 text-sm font-medium text-gray-700">Действия</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr v-for="(row, idx) in numbersList" :key="row.id">
+            <td class="px-4 py-2 text-sm text-gray-700">{{ row.name }}</td>
+            <td class="px-4 py-2">
+              <input type="number" v-model.number="row.min" class="w-24 p-1 border rounded" />
+            </td>
+            <td class="px-4 py-2">
+              <input type="number" v-model.number="row.max" class="w-24 p-1 border rounded" />
+            </td>
+            <td class="px-4 py-2">
+              <input type="number" v-model.number="row.answ" class="w-28 p-1 border rounded" />
+            </td>
+                <td class="px-4 py-2">
+                  <span v-if="row.status === 'idle'" class="px-3 py-1 bg-gray-200 text-sm rounded">Готов</span>
+                  <span v-else-if="row.status === 'sending'" class="px-3 py-1 bg-blue-100 text-sm text-blue-800 rounded">Отправка...</span>
+                  <span v-else-if="row.status === 'success'" class="px-3 py-1 bg-green-100 text-sm text-green-800 rounded">OK</span>
+                  <span v-else-if="row.status === 'error'" class="px-3 py-1 bg-red-100 text-sm text-red-800 rounded">Ошибка</span>
+                </td>
+          </tr>
+          <tr v-if="numbersList.length === 0">
+            <td colspan="5" class="p-6 text-center text-gray-500">Список для выгрузки пуст. Добавьте участников в список генерации.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-4 flex items-center space-x-3">
+      <button @click="randomizeAll" class="px-4 py-2 bg-gray-200 rounded">Рандомизировать все</button>
+      <button @click="handleSubmit" :disabled="uploading || numbersList.length===0" class="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-60">Выгрузить</button>
+      <span v-if="uploading" class="text-sm text-gray-600">Выгрузка...</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import api from '@/axios'
 
 // Реактивные данные
 const allParticipants = ref([])
 const originalParticipants = ref([]) // Исходные данные с сервера
 const generationList = ref([])
 const serverGenerationList = ref([]) // raw list exactly as server sent (ids or objects)
+const numbersList = ref([]) // rows for the numbers table
 const socket = ref(null)
 const isConnected = ref(false)
-const isGenerating = ref(false)
-const generationResult = ref(null)
 const reservedFractions = ref(new Map()) // Сохраненные доли участников в генерации
 const manualDead = ref(new Set()) // ids manually toggled by the user to 'dead'
+const uploading = ref(false)
+const emit = defineEmits(['added'])
 
 // Статус соединения
 const connectionStatus = computed(() => {
@@ -191,20 +225,7 @@ const recalculateDisplayFractions = () => {
   }))
 }
 
-// Диапазон долей для генерации
-const generationRange = computed(() => {
-  if (generationList.value.length === 0) {
-    return { from: 0, to: 0, total: 0 }
-  }
-
-  const total = generationList.value.reduce((sum, p) => sum + (p.fraction || 0), 0)
-
-  return {
-    from: total > 0 ? 1 : 0,
-    to: total,
-    total: total
-  }
-})
+// (Generation removed) -- UI now manages the lists only
 
 // Проверка, находится ли участник в списке для генерации (смотрим на raw серверный список)
 const isInGeneration = (id) => {
@@ -230,6 +251,7 @@ const buildGenerationUIList = () => {
           fraction: p.fraction || 0,
           fraction_from: p.fraction_from || 0,
           fraction_to: p.fraction_to || 0,
+          max_fraction: p.max_fraction || 0,
           _fromServer: false // indicate this snapshot was built locally from originalParticipants
         }
         reservedFractions.value.set(snapshot.id, snapshot)
@@ -246,6 +268,7 @@ const buildGenerationUIList = () => {
         fraction: typeof item.fraction !== 'undefined' ? item.fraction : 0,
         fraction_from: typeof item.fraction_from !== 'undefined' ? item.fraction_from : (typeof item.fractionFrom !== 'undefined' ? item.fractionFrom : 0),
         fraction_to: typeof item.fraction_to !== 'undefined' ? item.fraction_to : (typeof item.fractionTo !== 'undefined' ? item.fractionTo : 0),
+  max_fraction: typeof item.max_fraction !== 'undefined' ? item.max_fraction : (typeof item.maxFraction !== 'undefined' ? item.maxFraction : 0),
         _fromServer: true // indicate this snapshot comes directly from server and must not be altered
       }
       reservedFractions.value.set(snapshot.id, snapshot)
@@ -255,7 +278,38 @@ const buildGenerationUIList = () => {
 
   generationList.value = ui
   updateGenerationDisplay()
+  // Rebuild numbers list after generation UI list changes
+  buildNumbersList()
 }
+
+// Build numbersList from generationList. Each row: { id, name, answ, min, max, max_fraction }
+const randomBetween = (min, max) => {
+  min = Math.ceil(min)
+  max = Math.floor(max)
+  if (max < min) return min
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+const buildNumbersList = () => {
+  const rows = generationList.value.map(p => {
+    const minDisplay = Number(p.fraction_from || 1)
+    const maxDisplay = Number(p.fraction_to || p.max_fraction || p.fraction || minDisplay)
+    const answ = randomBetween(minDisplay, maxDisplay)
+    return {
+      id: p.id,
+      name: `${p.last_name} ${p.first_name}`.trim(),
+      answ,
+      min: minDisplay,
+      max: maxDisplay,
+  max_fraction: Number(p.max_fraction || 0),
+  status: 'idle' // idle | sending | success | error
+    }
+  })
+  numbersList.value = rows
+}
+
+// Rebuild when generationList changes
+watch(generationList, () => buildNumbersList())
 
 // WebSocket соединение
 const connectWebSocket = () => {
@@ -343,6 +397,48 @@ const connectWebSocket = () => {
 const updateGenerationList = () => {
   // Перестроить UI-список из serverGenerationList
   buildGenerationUIList()
+}
+
+// Randomize a single row using its min/max display values
+const randomizeRow = (index) => {
+  const row = numbersList.value[index]
+  if (!row) return
+  const min = Number(row.min || 1)
+  const max = Number(row.max || row.max_fraction || min)
+  row.answ = randomBetween(min, max)
+}
+
+const randomizeAll = () => {
+  for (let i = 0; i < numbersList.value.length; i++) {
+    randomizeRow(i)
+  }
+}
+
+// Upload each number row to backend per provided payload. For backend: min=1, max=participant.max_fraction
+const handleSubmit = async () => {
+  if (!numbersList.value.length) return
+  uploading.value = true
+  try {
+    for (const row of numbersList.value) {
+      row.status = 'sending'
+      const payload = {
+        answ: row.answ,
+        min: 1,
+        max: row.max_fraction || row.max || 1,
+        drop_count: 1
+      }
+      try {
+        await api.post('/predict/add', payload)
+        row.status = 'success'
+      } catch (err) {
+        row.status = 'error'
+        console.error('Ошибка при отправке строки', row, err)
+      }
+    }
+    emit('added')
+  } finally {
+    uploading.value = false
+  }
 }
 
 // Переключение статуса "жив/мёртв" вручную
@@ -435,9 +531,10 @@ const addToGeneration = async (person) => {
       row_id: person.id,
       first_name: person.first_name,
       last_name: person.last_name,
-      fraction: currentPerson ? currentPerson.fraction : person.fraction || 0,
-      fraction_from: currentPerson ? currentPerson.fraction_from : person.fraction_from || 0,
-      fraction_to: currentPerson ? currentPerson.fraction_to : person.fraction_to || 0
+  fraction: currentPerson ? currentPerson.fraction : person.fraction || 0,
+  fraction_from: currentPerson ? currentPerson.fraction_from : person.fraction_from || 0,
+  fraction_to: currentPerson ? currentPerson.fraction_to : person.fraction_to || 0,
+  max_fraction: currentPerson ? currentPerson.max_fraction : person.max_fraction || 0
     }
 
   // Добавляем в serverGenerationList (как сервер ожидает — id)
@@ -518,9 +615,10 @@ const updateGenerationDisplay = () => {
         snap.fraction = p.fraction
         snap.fraction_from = p.fraction_from
         snap.fraction_to = p.fraction_to
+  snap.max_fraction = p.max_fraction || snap.max_fraction || 0
         reservedFractions.value.set(p.id, snap)
       } else {
-        reservedFractions.value.set(p.id, { ...p })
+  reservedFractions.value.set(p.id, { ...p, max_fraction: p.max_fraction || 0 })
       }
       continue
     }
@@ -540,54 +638,15 @@ const updateGenerationDisplay = () => {
       snap.fraction = p.fraction
       snap.fraction_from = p.fraction_from
       snap.fraction_to = p.fraction_to
+  snap.max_fraction = p.max_fraction || snap.max_fraction || 0
       reservedFractions.value.set(p.id, snap)
     } else {
-      reservedFractions.value.set(p.id, { ...p })
+  reservedFractions.value.set(p.id, { ...p, max_fraction: p.max_fraction || 0 })
     }
   }
 }
 
-// Генерация числа
-const generateNumber = async () => {
-  if (generationList.value.length === 0) return
-  
-  isGenerating.value = true
-  generationResult.value = null
-  
-  try {
-    // Получаем диапазон для генерации
-    const range = generationRange.value
-    if (range.total === 0) {
-      throw new Error('Нет активных участников для генерации')
-    }
-    
-    // Генерируем случайное число от 1 до общего количества долей
-    const randomNumber = Math.floor(Math.random() * range.total) + 1
-    
-    // Находим победителя по сохраненным долям
-    let currentSum = 0
-    let winner = null
-    
-    for (const person of generationList.value) {
-      const personFraction = person.fraction || 0
-      currentSum += personFraction
-      if (randomNumber <= currentSum && personFraction > 0) {
-        winner = person
-        break
-      }
-    }
-    
-    generationResult.value = {
-      number: randomNumber,
-      winner: winner
-    }
-  } catch (error) {
-    console.error('Ошибка генерации:', error)
-    alert('Ошибка при генерации числа: ' + error.message)
-  } finally {
-    isGenerating.value = false
-  }
-}
+// Генерация удалена — интерфейс только управляет списком участников
 
 // Lifecycle hooks
 onMounted(() => {

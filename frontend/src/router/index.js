@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   { path: '/', name: 'PredictsList', component: () => import('@/view/DigitsLists.vue') },
   { path: '/login', name: 'Login', component: () => import('@/view/Login.vue') },
+  { path: '/smart', redirect: '/smart-generation' },
   { path: '/smart-generation', name: 'SmartGeneration', component: () => import('@/view/SmartGeneration.vue') },
 ]
 

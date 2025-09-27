@@ -114,7 +114,7 @@ func (h *Handler) wsHandler(c echo.Context) error {
 					FractionFrom: user.FractionFrom,
 					FractionTo:   user.FractionTo,
 					Fraction:     user.Fraction,
-					MaxFraction:  sheet.GetTotalFraction() - user.Fraction,
+					MaxFraction:  sheet.GetTotalFraction(),
 				})
 
 				log.Print(sheet.ModifiedUsers, sheet.Actions)
